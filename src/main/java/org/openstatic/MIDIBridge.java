@@ -5,12 +5,15 @@ import io.github.leovr.rtipmidi.session.AppleMidiSession;
 import io.github.leovr.rtipmidi.model.MidiMessage;
 
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 
 import java.nio.ByteBuffer;
+
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.EnumSet;
 import java.util.StringTokenizer;
 import java.util.concurrent.BlockingQueue;
@@ -40,7 +43,7 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
     private AppleMidiSession session;
     private String hostname = null;
     private ConcurrentLinkedQueue<TimedMidiMessage> jackOutputQueue;
-
+    private JmDNS jmdns;
     private byte[] data;
 
     private BlockingQueue<String> debugQueue;
@@ -61,7 +64,15 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
 
     private MIDIBridge() throws JackException
     {
-        this.hostname = getLocalHostname();
+        Runtime.getRuntime().addShutdownHook(new Thread()
+        {
+          public void run()
+          {
+            MIDIBridge.this.shutDownMDNS();
+          }
+        });
+        InetAddress localHost = this.getLocalHost();
+        this.hostname = localHost.getHostName();
 
         // Setup JACK
         this.jackOutputQueue = new ConcurrentLinkedQueue<TimedMidiMessage>();
@@ -86,11 +97,12 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
         // Setup Apple Midi
         try
         {
-            JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
-            ServiceInfo serviceInfo =
-                    ServiceInfo.create("_apple-midi._udp.local.", "JackRTPMidiBridge", 5004, "apple-midi");
+            this.jmdns = JmDNS.create(localHost);
+            ServiceInfo serviceInfo = ServiceInfo.create("_apple-midi._udp.local.", "JACKBridge", 5004, "JACK " + this.hostname);
             jmdns.registerService(serviceInfo);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+        }
 
         this.appleMidiServer = new AppleMidiServer(hostname, 5004);
         this.session = new AppleMidiSession()
@@ -200,25 +212,46 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
 
     }
 
-    public static String getLocalHostname()
+    public void shutDownMDNS()
     {
+        System.err.println("Please Wait for mDNS to de-register....");
         try
         {
-            String hn = InetAddress.getLocalHost().getHostName();
-            if (hn != null)
+            if (this.jmdns != null)
             {
-                if (hn.contains("."))
+                this.jmdns.unregisterAllServices();
+                try
                 {
-                    StringTokenizer st = new StringTokenizer(hn, ".");
-                    return st.nextToken();
-                } else {
-                    return hn;
+                    this.jmdns.close();
+                } catch (Exception e) {
+                    e.printStackTrace(System.err);
                 }
-            } else {
-                return null;
             }
         } catch (Exception e) {
-            return "";
+
         }
+    }
+
+    public static InetAddress getLocalHost()
+    {
+        InetAddress ra = null;
+        try
+        {
+            for(Enumeration<NetworkInterface> n = NetworkInterface.getNetworkInterfaces(); n.hasMoreElements();)
+            {
+                NetworkInterface ni = n.nextElement();
+                for(Enumeration<InetAddress> e = ni.getInetAddresses(); e.hasMoreElements();)
+                {
+                    InetAddress ia = e.nextElement();
+                    if (!ia.isLoopbackAddress() && ia.isSiteLocalAddress())
+                    {
+                        System.err.println("Possible Local Address:" + ia.toString());
+                        ra = ia;
+                    }
+                }
+            }
+
+        } catch (Exception e) {}
+        return ra;
     }
 }
