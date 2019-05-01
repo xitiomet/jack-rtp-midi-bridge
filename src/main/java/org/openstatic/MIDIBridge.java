@@ -33,6 +33,8 @@ import org.jaudiolibs.jnajack.JackProcessCallback;
 import org.jaudiolibs.jnajack.JackShutdownCallback;
 import org.jaudiolibs.jnajack.JackStatus;
 
+import org.apache.commons.cli.*;
+
 public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
 {
     private final JackClient client;
@@ -45,25 +47,41 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
     private ConcurrentLinkedQueue<TimedMidiMessage> jackOutputQueue;
     private JmDNS jmdns;
     private byte[] data;
-
+    private CommandLine commandLineOptions;
     private BlockingQueue<String> debugQueue;
 
     public static void main(String[] args)
     {
         try
         {
-            MIDIBridge midiSource = new MIDIBridge();
+            Options options = new Options();
+            CommandLineParser parser = new DefaultParser();
+
+            options.addOption(new Option("d", "debug", false, "Turn on debug."));
+            options.addOption(new Option("h", "help", false, "Show command line options and usage."));
+
+            CommandLine cmd = parser.parse(options, args);
+
+            if (cmd.hasOption("h"))
+            {
+                HelpFormatter formatter = new HelpFormatter();
+                formatter.printHelp( "midi-bridge", options );
+                System.exit(0);
+            }
+
+            MIDIBridge midiSource = new MIDIBridge(cmd);
             while (true)
             {
                 Thread.sleep(100000);
             }
         } catch (Exception ex) {
-            Logger.getLogger(MIDIBridge.class.getName()).log(Level.SEVERE, null, ex);
+
         }
     }
 
-    private MIDIBridge() throws JackException
+    private MIDIBridge(CommandLine cmdLine) throws JackException
     {
+        this.commandLineOptions = cmdLine;
         Runtime.getRuntime().addShutdownHook(new Thread()
         {
           public void run()
@@ -116,7 +134,8 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
                 if (message != null)
                 {
                     int ts = (int) (frameTime % 1024);
-                    //System.err.println("RTP Recieved Midi Event ts" + String.valueOf(ts) + " / " + String.valueOf(timestamp) + " Data:" + midiDataToString(message.getData()));
+                    if (MIDIBridge.this.commandLineOptions.hasOption("d"))
+                        System.err.println("RTP Recieved Midi Event tick=" + String.valueOf(ts) + " Data:" + midiDataToString(message.getData()));
                     MIDIBridge.this.jackOutputQueue.add(new TimedMidiMessage(message, ts));
                 }
             } catch (JackException je) {
@@ -188,7 +207,8 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
                 final int tickTs = (int) client.getLastFrameTime() % 1024;
                 MidiMessage m = new TimedMidiMessage(data, size, tickTs);
                 this.session.sendMidiMessage(m, tickTs);
-                //System.err.println("JACK Recieved Midi Event ts" + String.valueOf(midiEvent.time()) + " Data:" + midiDataToString(data) + " length:" + String.valueOf(midiEvent.size()));
+                if (MIDIBridge.this.commandLineOptions.hasOption("d"))
+                    System.err.println("JACK Recieved Midi Event tick=" + String.valueOf(tickTs) + " Data:" + midiDataToString(data));
             }
 
             // Read Events from AppleMidi Queue and write to jack with frame time
