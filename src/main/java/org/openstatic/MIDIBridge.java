@@ -59,6 +59,8 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
 
             options.addOption(new Option("d", "debug", false, "Turn on debug."));
             options.addOption(new Option("h", "help", false, "Show command line options and usage."));
+            options.addOption(new Option("j", "jackname", true, "Set the interface name for jack."));
+            options.addOption(new Option("r", "rtpname", true, "Set the interface name for RTP."));
 
             CommandLine cmd = parser.parse(options, args);
 
@@ -97,8 +99,9 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
         EnumSet<JackStatus> status = EnumSet.noneOf(JackStatus.class);
         try
         {
+            String jackName = MIDIBridge.this.commandLineOptions.getOptionValue('j',"RTPMidiBridge");
             Jack jack = Jack.getInstance();
-            client = jack.openClient("AppleMidiBridge", EnumSet.of(JackOptions.JackNoStartServer), status);
+            client = jack.openClient(jackName, EnumSet.of(JackOptions.JackNoStartServer), status);
             if (!status.isEmpty()) {
                 System.out.println("JACK client status : " + status);
             }
@@ -115,8 +118,9 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
         // Setup Apple Midi
         try
         {
+            String rtpName = MIDIBridge.this.commandLineOptions.getOptionValue('r',"JACKMidiBridge");
             this.jmdns = JmDNS.create(localHost);
-            ServiceInfo serviceInfo = ServiceInfo.create("_apple-midi._udp.local.", "JACKBridge", 5004, "JACK " + this.hostname);
+            ServiceInfo serviceInfo = ServiceInfo.create("_apple-midi._udp.local.", rtpName, 5004, "JACK MIDI on " + this.hostname);
             jmdns.registerService(serviceInfo);
         } catch (Exception e) {
             e.printStackTrace(System.err);
