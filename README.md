@@ -2,7 +2,7 @@
 
 I was looking for a rather simple way to make JACK stuff talk to Apple MIDI devices (Mainly a mac running ableton) this is the solution i came up with. I Know, I  know, Java for something like this? Why not it works well.
 
-![alt text](https://github.com/xitomet/jack-rtp-midi-bridge/raw/master/res/jack-side.png "Jack Screenshot")
+![alt text](https://raw.githubusercontent.com/xitiomet/jack-rtp-midi-bridge/master/res/jack-side.png "Jack Screenshot")
 
 Things you will need to do to prepare your system
 - sudo apt-get-install maven openjdk-8-jdk
