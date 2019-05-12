@@ -161,31 +161,7 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
         return sb.toString();
     }
 
-    public class TimedMidiMessage extends MidiMessage
-    {
-        private int tick;
 
-        public TimedMidiMessage(MidiMessage m, int tick)
-        {
-            this(m.getData(), tick);
-        }
-
-        public TimedMidiMessage(final byte[] bytes, int tick)
-        {
-            this(bytes, bytes.length, tick);
-        }
-
-        public TimedMidiMessage(final byte[] bytes, int size, int tick)
-        {
-            super(bytes, size);
-            this.tick = tick;
-        }
-
-        public int getTick()
-        {
-            return this.tick;
-        }
-    }
 
     // THIS LOOP IS IMPORTNANT ALL JACK STUFF MUST BE DONE HERE!
     @Override
@@ -234,25 +210,21 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
 
     public void shutDownMDNS()
     {
-        System.err.println("Please Wait for mDNS to de-register....");
-        try
+        if (this.jmdns != null)
         {
-            if (this.jmdns != null)
+            System.err.println("Please Wait for mDNS to unregister....");
+            try
             {
                 this.jmdns.unregisterAllServices();
-                try
-                {
-                    this.jmdns.close();
-                } catch (Exception e) {
-                    e.printStackTrace(System.err);
-                }
+                this.jmdns.close();
+            } catch (Exception e) {
+                e.printStackTrace(System.err);
             }
-        } catch (Exception e) {
-
         }
     }
 
-    public static InetAddress getLocalHost()
+    // Figure out the local host ignoring any loopback interfaces.
+    private static InetAddress getLocalHost()
     {
         InetAddress ra = null;
         try
