@@ -5,7 +5,7 @@ I was looking for a rather simple way to make JACK stuff talk to Apple MIDI devi
 ![alt text](https://raw.githubusercontent.com/xitiomet/jack-rtp-midi-bridge/master/res/jack-side.png "Jack Screenshot")
 
 Things you will need to do to prepare your system
-- sudo apt-get-install maven openjdk-8-jdk
+- sudo apt-get-install maven openjdk-8-jdk libjack-jackd2-dev
 - ./compile.sh
 
 To run this program just type "./midi-bridge"
@@ -19,7 +19,8 @@ usage: midi-bridge
 ```
 
 Thanks to the creators of:
-https://github.com/jaudiolibs/jnajack
-https://github.com/LeovR/rtp-midi
+
+- https://github.com/jaudiolibs/jnajack
+- https://github.com/LeovR/rtp-midi
 
 for making this project possible
