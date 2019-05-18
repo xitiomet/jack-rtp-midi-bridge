@@ -184,7 +184,7 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
                     data = new byte[size];
                 }
                 midiEvent.read(data);
-                final int tickTs = (int) client.getLastFrameTime() % 1024;
+                final int tickTs = (int) Math.floorDiv(client.getLastFrameTime(), 10l) % 1024;
                 MidiMessage m = new TimedMidiMessage(data, size, tickTs);
                 this.session.sendMidiMessage(m, tickTs);
                 if (MIDIBridge.this.commandLineOptions.hasOption("d"))
