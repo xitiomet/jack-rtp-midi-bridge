@@ -1,0 +1,8 @@
+Package: jack-apple-midi-bridge
+Version: 1.0
+Section: misc
+Priority: low
+Architecture: all
+Description: Jack Appple-Midi Bridge
+Depends: default-jre libjack-jackd2-dev
+Maintainer: openstatic.org <support@openstatic.org>

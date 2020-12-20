@@ -49,6 +49,7 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
     private byte[] data;
     private CommandLine commandLineOptions;
     private BlockingQueue<String> debugQueue;
+    private boolean keep_running;
     private int bufferSize;
 
     public static void main(String[] args)
@@ -73,9 +74,9 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
             }
 
             MIDIBridge midiSource = new MIDIBridge(cmd);
-            while (true)
+            while (midiSource.keep_running)
             {
-                Thread.sleep(100000);
+                Thread.sleep(1000);
             }
         } catch (Exception ex) {
 
@@ -84,6 +85,7 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
 
     private MIDIBridge(CommandLine cmdLine) throws JackException
     {
+        this.keep_running = true;
         this.commandLineOptions = cmdLine;
         Runtime.getRuntime().addShutdownHook(new Thread()
         {
@@ -213,7 +215,8 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
     @Override
     public void clientShutdown(JackClient client)
     {
-
+        System.err.println("Jack Client Shutdown");
+        this.keep_running = false;
     }
 
     public void shutDownMDNS()

@@ -10,8 +10,8 @@
   <url>http://openstatic.org/</url>
   <properties>
     <mainClass>org.openstatic.MIDIBridge</mainClass>
-    <maven.compiler.source>1.6</maven.compiler.source>
-    <maven.compiler.target>1.6</maven.compiler.target>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 
   <dependencies>
@@ -87,6 +87,57 @@
                 </goals>
               </execution>
             </executions>
+        </plugin>
+        <plugin>
+          <artifactId>jdeb</artifactId>
+          <groupId>org.vafer</groupId>
+          <version>1.8</version>
+          <executions>
+              <execution>
+                  <phase>package</phase>
+                  <goals>
+                      <goal>jdeb</goal>
+                  </goals>
+                  <configuration>
+                      <verbose>true</verbose>
+                      <snapshotExpand>true</snapshotExpand>
+                      <!-- expand "SNAPSHOT" to what is in the "USER" env variable -->
+                      <snapshotEnv>USER</snapshotEnv>
+                      <controlDir>${basedir}/src/deb/control</controlDir>
+                      <deb>${project.build.directory}/${artifactId}-${version}.deb</deb>
+                      <dataSet>
+                          <data>
+                            <src>${project.build.directory}/${project.build.finalName}.jar</src>
+                            <type>file</type>
+                            <mapper>
+                              <type>perm</type>
+                              <prefix>/usr/share/jamb/lib</prefix>
+                              <user>loader</user>
+                              <group>loader</group>
+                              <filemode>755</filemode>
+                            </mapper>
+                          </data>
+                          <data>
+                            <src>${basedir}/src/deb/jamb</src>
+                            <type>file</type>
+                            <mapper>
+                              <type>perm</type>
+                              <prefix>/usr/bin</prefix>
+                              <user>loader</user>
+                              <group>loader</group>
+                              <filemode>755</filemode>
+                            </mapper>
+                          </data>
+                          <data>
+                            <type>link</type>
+                            <symlink>true</symlink>
+                            <linkName>/usr/share/java/jamb.jar</linkName>
+                            <linkTarget>../jamb/lib/${project.build.finalName}.jar</linkTarget>
+                          </data>
+                      </dataSet>
+                  </configuration>
+              </execution>
+          </executions>
         </plugin>
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
