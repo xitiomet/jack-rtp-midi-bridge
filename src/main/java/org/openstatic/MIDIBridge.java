@@ -69,7 +69,7 @@ public class MIDIBridge implements JackProcessCallback, JackShutdownCallback
             if (cmd.hasOption("h"))
             {
                 HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp( "midi-bridge", options );
+                formatter.printHelp( "jamb", options );
                 System.exit(0);
             }
 

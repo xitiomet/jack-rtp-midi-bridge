@@ -14,10 +14,10 @@ Things you will need to do to prepare your system
 - sudo apt-get-install maven openjdk-8-jdk libjack-jackd2-dev
 - ./compile.sh
 
-To run this program just type "./midi-bridge" (it must be run from the machine running jack)
+To run this program just type "jamb" (it must be run from the machine running jack)
 
 ```bash
-usage: midi-bridge
+usage: jamb
  -d,--debug            Turn on debug.
  -h,--help             Show command line options and usage.
  -j,--jackname <arg>   Set the interface name for jack.
